@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWB per District</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #0f172a, #020617);
+      color: #e5e7eb;
+      margin: 0;
+      padding: 16px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+      color: #38bdf8;
+    }
+
+    .card {
+      background: rgba(30, 41, 59, 0.6);
+      backdrop-filter: blur(10px);
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 10px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .guide {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+
+    input, button {
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      margin: 6px;
+      font-size: 14px;
+    }
+
+    input {
+      background: #020617;
+      color: #e5e7eb;
+      border: 1px solid #334155;
+    }
+
+    button {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .district-box {
+      background: rgba(2, 6, 23, 0.85);
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+      overflow-x: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .header h3 {
+      margin: 0;
+      font-size: 16px;
+      color: #facc15;
+    }
+
+    .count {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-left: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      table-layout: fixed;
+    }
+
+    th {
+      background: linear-gradient(135deg, #334155, #1e293b);
+      text-align: center;
+      color: #e2e8f0;
+      padding: 8px;
+    }
+
+    td {
+      border: 1px solid #1e293b;
+      padding: 6px;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(51, 65, 85, 0.2);
+    }
+
+    .priority {
+      background: rgba(239, 68, 68, 0.2) !important;
+      color: #fecaca;
+      font-weight: bold;
+    }
+
+    .badge {
+      background: #ef4444;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-size: 10px;
+      margin-left: 6px;
+    }
+
+    td:nth-child(1), th:nth-child(1) { width: 120px; }
+    td:nth-child(2), th:nth-child(2) { width: 160px; }
+    td:nth-child(3), th:nth-child(3) { width: 320px; }
+
+  </style>
+</head>
+
+<body>
+
+<h1>📝 AWB per District</h1>
+
+<div class="card">
+  <input type="file" id="fileInput">
+  <button onclick="processFile()">Proses</button>
+
+  <div class="guide">
+    Cara penggunaan:<br>
+    1. Upload file hasil download<br>
+    2. File berasal dari menu <b>Awere → Receiver Information</b><br>
+    3. Pastikan file sudah di-extract sebelum di-upload<br>
+    4. Klik tombol <b>Proses</b><br>
+    5. Klik <b>HD Download</b> untuk simpan per district
+  </div>
+</div>
+
+<div id="output" class="grid"></div>
+
+<script>
+function processFile() {
+  const file = document.getElementById('fileInput').files[0];
+  if (!file) return alert('Upload file dulu!');
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const text = e.target.result;
+    const lines = text.split('\n');
+
+    let districts = {};
+
+    lines.forEach((line, index) => {
+      if (index === 0) return;
+      const cols = line.split('|');
+      if (cols.length < 5) return;
+
+      const awb = cols[0];
+      const name = cols[2];
+      const address = cols[3];
+      const district = cols[4];
+
+      if (!districts[district]) districts[district] = [];
+      districts[district].push({awb, name, address});
+    });
+
+    renderDistricts(districts);
+  };
+
+  reader.readAsText(file);
+}
+
+function renderDistricts(data) {
+  const output = document.getElementById('output');
+  output.innerHTML = '';
+
+  Object.keys(data).forEach(district => {
+    const id = 'district_' + district.replace(/\s/g,'_');
+
+    const container = document.createElement('div');
+    container.className = 'district-box';
+    container.id = id;
+
+    let html = `
+      <div class="header">
+        <h3>${district} <span class="count">(${data[district].length} AWB)</span></h3>
+        <button onclick="downloadJPG('${id}', '${district}')">HD Download</button>
+      </div>
+    `;
+
+    html += `<table>
+      <tr>
+        <th>AWB</th>
+        <th>Nama</th>
+        <th>Alamat</th>
+      </tr>`;
+
+    data[district].forEach(row => {
+
+      const isPriority = !row.name.includes('*');
+
+      html += `
+        <tr class="${isPriority ? 'priority' : ''}">
+          <td>${row.awb}</td>
+          <td>
+            ${row.name}
+            ${isPriority ? '<span class="badge">Prioritas</span>' : ''}
+          </td>
+          <td>${row.address}</td>
+        </tr>`;
+    });
+
+    html += `</table>`;
+
+    container.innerHTML = html;
+    output.appendChild(container);
+  });
+}
+
+function downloadJPG(id, districtName) {
+  const original = document.getElementById(id);
+
+  const clone = original.cloneNode(true);
+
+  clone.style.position = "absolute";
+  clone.style.top = "-9999px";
+  clone.style.left = "0";
+  clone.style.width = "auto";
+  clone.style.maxWidth = "none";
+  clone.style.overflow = "visible";
+  clone.style.background = "#020617";
+  clone.style.padding = "16px";
+
+  clone.querySelectorAll('*').forEach(el => {
+    el.style.overflow = "visible";
+  });
+
+  document.body.appendChild(clone);
+
+  const now = new Date();
+
+  const dateStr = now.getFullYear() + '-' +
+    String(now.getMonth()+1).padStart(2,'0') + '-' +
+    String(now.getDate()).padStart(2,'0');
+
+  const timeStr =
+    String(now.getHours()).padStart(2,'0') + '-' +
+    String(now.getMinutes()).padStart(2,'0');
+
+  const safeName = districtName.replace(/\s+/g,'_');
+
+  html2canvas(clone, {
+    scale: 4,
+    useCORS: true
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = safeName + '_' + dateStr + '_' + timeStr + '.jpg';
+    link.href = canvas.toDataURL('image/jpeg', 1.0);
+    link.click();
+
+    document.body.removeChild(clone);
+  });
+}
+</script>
+
+</body>
+</html>
