@@ -3,11 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AWB per District</title>
-
+  <title>AWB Manager - Dual Tab dengan Tabel Rapi</title>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <style>
+    /* ===== GAYA DASAR (dari script awal user) ===== */
     body {
       font-family: 'Segoe UI', sans-serif;
       background: linear-gradient(135deg, #0f172a, #020617);
@@ -61,13 +60,65 @@
       cursor: pointer;
     }
 
+    /* Tab Bar */
+    .tab-bar {
+      display: flex;
+      gap: 16px;
+      margin: 20px 0 20px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+      padding-bottom: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      font-size: 18px;
+      font-weight: 600;
+      padding: 10px 28px;
+      border-radius: 40px;
+      color: #cbd5e1;
+      transition: 0.2s;
+      margin: 0;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+    .tab1-theme .tab-btn.active { background: linear-gradient(135deg, #1e3a8a, #2563eb); }
+    .tab2-theme .tab-btn.active { background: linear-gradient(135deg, #4c1d95, #7c3aed); }
+
+    .tab-pane {
+      display: none;
+      animation: fade 0.25s ease;
+    }
+    .tab-pane.active-pane {
+      display: block;
+    }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Tema Tab 1 (Blue gelap) - warna tabel tetap gelap seperti awal */
+    .theme-tab1 {
+      background: radial-gradient(ellipse at 20% 30%, #0f172a, #020617);
+      border-radius: 24px;
+      padding: 20px;
+    }
+    /* Tema Tab 2 (Purple) - background tetap gelap, tapi tabel dibuat terang */
+    .theme-tab2 {
+      background: radial-gradient(ellipse at 80% 20%, #1e1b2e, #0a0514);
+      border-radius: 24px;
+      padding: 20px;
+    }
+
+    /* Grid dan box (sama seperti script awal) */
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
       gap: 16px;
     }
 
-    .district-box {
+    .district-box, .tambahan-box {
       background: rgba(2, 6, 23, 0.85);
       border-radius: 16px;
       padding: 12px;
@@ -75,57 +126,65 @@
       border: 1px solid rgba(255,255,255,0.05);
       overflow-x: auto;
     }
+    /* Tema tab2 box background sedikit terang agar kontras dengan tabel putih */
+    .theme-tab2 .district-box, .theme-tab2 .tambahan-box {
+      background: rgba(255, 255, 245, 0.95);
+      border: 1px solid rgba(0,0,0,0.1);
+    }
 
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
-
     .header h3 {
       margin: 0;
       font-size: 16px;
       color: #facc15;
     }
-
+    /* Warna header tab2 */
+    .theme-tab2 .header h3 {
+      color: #334155;
+    }
     .count {
       font-size: 12px;
       color: #94a3b8;
       margin-left: 8px;
     }
+    .theme-tab2 .count {
+      color: #64748b;
+    }
 
+    /* TABEL - LEBAR KOLOM SAMA PERSIS SEPERTI SCRIPT AWAL (berlaku untuk semua tabel) */
     table {
       width: 100%;
       border-collapse: collapse;
       font-size: 11px;
       table-layout: fixed;
     }
-
     th {
       background: linear-gradient(135deg, #334155, #1e293b);
       text-align: center;
       color: #e2e8f0;
       padding: 8px;
     }
-
     td {
       border: 1px solid #1e293b;
       padding: 6px;
       white-space: normal;
       word-break: break-word;
     }
-
     tr:nth-child(even) {
       background: rgba(51, 65, 85, 0.2);
     }
-
     .priority {
       background: rgba(239, 68, 68, 0.2) !important;
       color: #fecaca;
       font-weight: bold;
     }
-
     .badge {
       background: #ef4444;
       color: white;
@@ -134,158 +193,405 @@
       font-size: 10px;
       margin-left: 6px;
     }
+    /* Lebar kolom untuk semua tabel (origin 3 kolom) */
+    td:nth-child(1), th:nth-child(1) { width: 120px; }  /* AWB */
+    td:nth-child(2), th:nth-child(2) { width: 160px; }  /* Nama */
+    td:nth-child(3), th:nth-child(3) { width: 320px; }  /* Alamat */
+    /* Khusus tabel tambahan (4 kolom), kolom ke-4 (Kecamatan) lebar 120px */
+    .tambahan-table td:nth-child(4), .tambahan-table th:nth-child(4) { width: 120px; }
 
-    td:nth-child(1), th:nth-child(1) { width: 120px; }
-    td:nth-child(2), th:nth-child(2) { width: 160px; }
-    td:nth-child(3), th:nth-child(3) { width: 320px; }
+    /* ========== WARNA TABEL UNTUK TAB 2 (TERANG) ========== */
+    .theme-tab2 table {
+      background-color: #fffef7;
+      color: #1e293b;
+    }
+    .theme-tab2 th {
+      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+      color: #0f172a;
+      border-color: #cbd5e1;
+    }
+    .theme-tab2 td {
+      border-color: #cbd5e1;
+      color: #1e293b;
+    }
+    .theme-tab2 tr:nth-child(even) {
+      background: rgba(0, 0, 0, 0.05);
+    }
+    .theme-tab2 .priority {
+      background: rgba(239, 68, 68, 0.25) !important;
+      color: #991b1b;
+    }
+    .theme-tab2 .badge {
+      background: #dc2626;
+      color: white;
+    }
+    .theme-tab2 .btn-download, 
+    .theme-tab2 button[onclick*="downloadJPG"] {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
 
+    .tambahan-container {
+      margin-top: 40px;
+      border-top: 2px dashed #facc15;
+      padding-top: 20px;
+    }
+    .tambahan-title {
+      font-size: 1.3rem;
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      background: linear-gradient(135deg, #facc15, #f97316);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .tambahan-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 16px;
+    }
+    .empty-origin {
+      text-align: center;
+      padding: 20px;
+      color: #64748b;
+      font-style: italic;
+    }
   </style>
 </head>
-
 <body>
 
-<h1>📝 AWB per District</h1>
+<h1>📝 AWB per District + Tabel Tambahan</h1>
 
 <div class="card">
-  <input type="file" id="fileInput">
+  <input type="file" id="fileInput" accept=".txt,.csv,.prn">
   <button onclick="processFile()">Proses</button>
-
   <div class="guide">
     Cara penggunaan:<br>
-    1. Upload file hasil download<br>
+    1. Upload file hasil download (format pipe | )<br>
     2. File berasal dari menu <b>Awere → Receiver Information</b><br>
-    3. Pastikan file sudah di-extract sebelum di-upload<br>
-    4. Klik tombol <b>Proses</b><br>
-    5. Klik <b>HD Download</b> untuk simpan per district
+    3. Data yang memenuhi kriteria akan dipindahkan ke tabel tambahan per nama (Arif, Rudi, Azi, Gigih, Fitli, Ahmad)<br>
+    4. Klik <b>HD Download</b> pada setiap tabel untuk menyimpan gambar (scale 4)<br>
+    5. Tabel memiliki lebar kolom tetap (AWB 120px, Nama 160px, Alamat 320px)<br>
+    6. <b>Tab 1: tabel gelap, Tab 2: tabel putih/cream dengan font gelap</b><br>
+    7. <b>Download di tab 2 akan menghasilkan gambar dengan tema terang (sudah diperbaiki)</b>
   </div>
 </div>
 
-<div id="output" class="grid"></div>
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="tab1">📑 Data Detail AWB (Dark)</button>
+  <button class="tab-btn" data-tab="tab2">✨ Detail AWB Premium (Light)</button>
+</div>
+
+<!-- TAB 1 -->
+<div id="tab1" class="tab-pane active-pane">
+  <div class="theme-tab1">
+    <div id="originContainerTab1" class="grid"></div>
+    <div id="tambahanContainerTab1" class="tambahan-container" style="display: none;"></div>
+  </div>
+</div>
+
+<!-- TAB 2 -->
+<div id="tab2" class="tab-pane">
+  <div class="theme-tab2">
+    <div id="originContainerTab2" class="grid"></div>
+    <div id="tambahanContainerTab2" class="tambahan-container" style="display: none;"></div>
+  </div>
+</div>
 
 <script>
-function processFile() {
-  const file = document.getElementById('fileInput').files[0];
-  if (!file) return alert('Upload file dulu!');
+  // ======================= KRITERIA (Sesuai permintaan) =======================
+  function isArifMatch(district, address) {
+    if (!address) return false;
+    const a = address.toLowerCase();
+    if (district === 'Playen') return ['banyusoca','banyusoco','banyu soca','banyu soco','klepi'].some(k => a.includes(k));
+    if (district === 'Wonosari') return ['singkar','wareng','seneng','RnB'].some(k => a.includes(k));
+    return false;
+  }
+  function isRudiMatch(district, address) {
+    if (!address) return false;
+    const a = address.toLowerCase();
+    if (district === 'Wonosari') return ['wukirsari','mulyosari','purwosari','tegalsari','karangrejek','karang rejek','mulo','dunggubah','karanggumuk','karang gumuk','duwet','karangsari','kepil','wunung','teguhan'].some(k => a.includes(k));
+    if (district === 'Semanu') return ['serpeng','pacing'].some(k => a.includes(k));
+    return false;
+  }
+  function isAziMatch(district, address) {
+    if (!address) return false;
+    const a = address.toLowerCase();
+    if (district === 'Wonosari') return ['rejosari','gadungsari','gadung sari','pandan sari','pandansari','tawarsari','tawar sari','jeruk'].some(k => a.includes(k));
+    return false;
+  }
+  function isGigihMatch(district, address) {
+    if (!address) return false;
+    const a = address.toLowerCase();
+    if (district === 'Wonosari') return ['kranon','ledok sari','ledoksari'].some(k => a.includes(k));
+    if (district === 'Playen') {
+      if (a.includes('gading')) {
+        const exclude = ['gading 9','gading ix','gading 10','gading x'];
+        return !exclude.some(ex => a.includes(ex));
+      }
+      return false;
+    }
+    return false;
+  }
+  function isFitliMatch(district, address) {
+    if (!address) return false;
+    const a = address.toLowerCase();
+    if (district === 'Wonosari') return ['sumber mulyo','sumbermulyo','besari','siraman 1','siraman i','siraman 2','siraman ii','siraman 3','siraman iii','pulutan'].some(k => a.includes(k));
+    if (district === 'Playen') return ['papringan','wiyoko','ngasem utara','ngasem selatan','plembutan','toboyo'].some(k => a.includes(k));
+    return false;
+  }
+  function isAhmadMatch(district, address) {
+    if (!address) return false;
+    const a = address.toLowerCase();
+    if (district === 'Wonosari') return ['selang','mokol','randukuning','randu kuning','gedangsari'].some(k => a.includes(k));
+    return false;
+  }
+  function getMatchedNames(district, address) {
+    let m = [];
+    if (isArifMatch(district,address)) m.push('Arif');
+    if (isRudiMatch(district,address)) m.push('Rudi');
+    if (isAziMatch(district,address)) m.push('Azi');
+    if (isGigihMatch(district,address)) m.push('Gigih');
+    if (isFitliMatch(district,address)) m.push('Fitli');
+    if (isAhmadMatch(district,address)) m.push('Ahmad');
+    return m;
+  }
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    const text = e.target.result;
-    const lines = text.split('\n');
+  let globalOrigin = {};
+  let globalTambahan = { Arif:[], Rudi:[], Azi:[], Gigih:[], Fitli:[], Ahmad:[] };
+  let dataLoaded = false;
 
-    let districts = {};
+  function processFile() {
+    const file = document.getElementById('fileInput').files[0];
+    if (!file) return alert('Upload file dulu!');
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const lines = text.split('\n');
+      let rawDistricts = {};
+      globalTambahan = { Arif:[], Rudi:[], Azi:[], Gigih:[], Fitli:[], Ahmad:[] };
+      
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split('|');
+        if (cols.length < 5) continue;
+        const awb = cols[0].trim();
+        const name = cols[2].trim();
+        const address = cols[3].trim();
+        const district = cols[4].trim();
+        if (!awb) continue;
+        if (!rawDistricts[district]) rawDistricts[district] = [];
+        rawDistricts[district].push({ awb, name, address, district });
+      }
+      
+      let originTemp = {};
+      for (let dist in rawDistricts) originTemp[dist] = [];
+      for (let dist in rawDistricts) {
+        rawDistricts[dist].forEach(row => {
+          const matched = getMatchedNames(row.district, row.address);
+          if (matched.length > 0) {
+            matched.forEach(n => globalTambahan[n].push(row));
+          } else {
+            originTemp[dist].push(row);
+          }
+        });
+      }
+      globalOrigin = originTemp;
+      dataLoaded = true;
+      renderBothTabs();
+    };
+    reader.readAsText(file);
+  }
 
-    lines.forEach((line, index) => {
-      if (index === 0) return;
-      const cols = line.split('|');
-      if (cols.length < 5) return;
-
-      const awb = cols[0];
-      const name = cols[2];
-      const address = cols[3];
-      const district = cols[4];
-
-      if (!districts[district]) districts[district] = [];
-      districts[district].push({awb, name, address});
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
     });
+  }
 
-    renderDistricts(districts);
-  };
-
-  reader.readAsText(file);
-}
-
-function renderDistricts(data) {
-  const output = document.getElementById('output');
-  output.innerHTML = '';
-
-  Object.keys(data).forEach(district => {
-    const id = 'district_' + district.replace(/\s/g,'_');
-
-    const container = document.createElement('div');
-    container.className = 'district-box';
-    container.id = id;
-
-    let html = `
-      <div class="header">
-        <h3>${district} <span class="count">(${data[district].length} AWB)</span></h3>
-        <button onclick="downloadJPG('${id}', '${district}')">HD Download</button>
-      </div>
-    `;
-
-    html += `<table>
-      <tr>
-        <th>AWB</th>
-        <th>Nama</th>
-        <th>Alamat</th>
-      </tr>`;
-
-    data[district].forEach(row => {
-
-      const isPriority = !row.name.includes('*');
-
-      html += `
-        <tr class="${isPriority ? 'priority' : ''}">
-          <td>${row.awb}</td>
-          <td>
-            ${row.name}
-            ${isPriority ? '<span class="badge">Prioritas</span>' : ''}
-          </td>
-          <td>${row.address}</td>
-        </tr>`;
+  function renderTab(suffix, origin, tambahan) {
+    const originDiv = document.getElementById(`originContainer${suffix}`);
+    const tambahanDiv = document.getElementById(`tambahanContainer${suffix}`);
+    if (!originDiv) return;
+    originDiv.innerHTML = '';
+    
+    for (let district in origin) {
+      const rows = origin[district];
+      const boxId = `origin_${suffix}_${district.replace(/\s/g,'_')}`;
+      const container = document.createElement('div');
+      container.className = 'district-box';
+      container.id = boxId;
+      
+      let html = `
+        <div class="header">
+          <h3>${district} <span class="count">(${rows.length} AWB)</span></h3>
+          <button onclick="downloadJPG('${boxId}', 'Origin_${district}_${suffix}')">HD Download</button>
+        </div>
+      `;
+      
+      if (rows.length === 0) {
+        html += `<div class="empty-origin">✨ Semua data terpindah ke tabel tambahan</div>`;
+      } else {
+        html += `<table>
+          <thead><tr><th>AWB</th><th>Nama</th><th>Alamat</th></tr></thead>
+          <tbody>`;
+        rows.forEach(row => {
+          const isPriority = !row.name.includes('*');
+          const rowClass = isPriority ? 'priority' : '';
+          html += `
+            <tr class="${rowClass}">
+              <td>${escapeHtml(row.awb)}</td>
+              <td>${escapeHtml(row.name)} ${isPriority ? '<span class="badge">Prioritas</span>' : ''}</td>
+              <td>${escapeHtml(row.address)}</td>
+            </tr>`;
+        });
+        html += `</tbody></table>`;
+      }
+      container.innerHTML = html;
+      originDiv.appendChild(container);
+    }
+    
+    const names = ['Arif','Rudi','Azi','Gigih','Fitli','Ahmad'];
+    let hasAny = false;
+    const tambahanGrid = document.createElement('div');
+    tambahanGrid.className = 'tambahan-grid';
+    
+    for (let name of names) {
+      const data = tambahan[name];
+      if (data.length === 0) continue;
+      hasAny = true;
+      const boxId = `tambahan_${suffix}_${name}`;
+      const box = document.createElement('div');
+      box.className = 'district-box tambahan-box';
+      box.id = boxId;
+      
+      let html = `
+        <div class="header">
+          <h3>📋 Tambahan ${name} <span class="count">(${data.length} AWB)</span></h3>
+          <button onclick="downloadJPG('${boxId}', 'Tambahan_${name}_${suffix}')">HD Download</button>
+        </div>
+        <table class="tambahan-table">
+          <thead><tr><th>AWB</th><th>Nama</th><th>Alamat</th><th>Kecamatan</th></tr></thead>
+          <tbody>`;
+      data.forEach(row => {
+        const isPriority = !row.name.includes('*');
+        const rowClass = isPriority ? 'priority' : '';
+        html += `
+          <tr class="${rowClass}">
+            <td>${escapeHtml(row.awb)}</td>
+            <td>${escapeHtml(row.name)} ${isPriority ? '<span class="badge">Prioritas</span>' : ''}</td>
+            <td>${escapeHtml(row.address)}</td>
+            <td>${escapeHtml(row.district)}</td>
+          </tr>`;
+      });
+      html += `</tbody></table>`;
+      box.innerHTML = html;
+      tambahanGrid.appendChild(box);
+    }
+    
+    if (tambahanDiv) {
+      tambahanDiv.innerHTML = '';
+      if (hasAny) {
+        const title = document.createElement('div');
+        title.className = 'tambahan-title';
+        title.innerText = '📌 TABEL TAMBAHAN PER NAMA (GLOBAL)';
+        tambahanDiv.appendChild(title);
+        tambahanDiv.appendChild(tambahanGrid);
+        tambahanDiv.style.display = 'block';
+      } else {
+        tambahanDiv.style.display = 'none';
+      }
+    }
+  }
+  
+  function renderBothTabs() {
+    if (!dataLoaded) return;
+    renderTab('Tab1', globalOrigin, globalTambahan);
+    renderTab('Tab2', globalOrigin, globalTambahan);
+  }
+  
+  // ========= PERBAIKAN: download sesuai tema =========
+  function downloadJPG(elementId, filenamePrefix) {
+    const original = document.getElementById(elementId);
+    if (!original) return;
+    
+    // Cari apakah elemen ini berada di dalam .theme-tab2 (Tab 2)
+    let isLightTheme = false;
+    let parent = original.parentElement;
+    while (parent) {
+      if (parent.classList && parent.classList.contains('theme-tab2')) {
+        isLightTheme = true;
+        break;
+      }
+      parent = parent.parentElement;
+    }
+    
+    const clone = original.cloneNode(true);
+    clone.style.position = "absolute";
+    clone.style.top = "-9999px";
+    clone.style.left = "0";
+    clone.style.width = "auto";
+    clone.style.maxWidth = "none";
+    clone.style.overflow = "visible";
+    
+    // Tambahkan class tema yang sesuai agar style terang/gelap ikut
+    if (isLightTheme) {
+      clone.classList.add('theme-tab2');
+      // juga pastikan background box menjadi terang
+      clone.style.background = "rgba(255, 255, 245, 0.95)";
+    } else {
+      clone.style.background = "#020617";
+    }
+    clone.style.padding = "16px";
+    clone.style.borderRadius = "16px";
+    
+    clone.querySelectorAll('*').forEach(el => {
+      el.style.overflow = "visible";
     });
-
-    html += `</table>`;
-
-    container.innerHTML = html;
-    output.appendChild(container);
-  });
-}
-
-function downloadJPG(id, districtName) {
-  const original = document.getElementById(id);
-
-  const clone = original.cloneNode(true);
-
-  clone.style.position = "absolute";
-  clone.style.top = "-9999px";
-  clone.style.left = "0";
-  clone.style.width = "auto";
-  clone.style.maxWidth = "none";
-  clone.style.overflow = "visible";
-  clone.style.background = "#020617";
-  clone.style.padding = "16px";
-
-  clone.querySelectorAll('*').forEach(el => {
-    el.style.overflow = "visible";
-  });
-
-  document.body.appendChild(clone);
-
-  const now = new Date();
-
-  const dateStr = now.getFullYear() + '-' +
-    String(now.getMonth()+1).padStart(2,'0') + '-' +
-    String(now.getDate()).padStart(2,'0');
-
-  const timeStr =
-    String(now.getHours()).padStart(2,'0') + '-' +
-    String(now.getMinutes()).padStart(2,'0');
-
-  const safeName = districtName.replace(/\s+/g,'_');
-
-  html2canvas(clone, {
-    scale: 4,
-    useCORS: true
-  }).then(canvas => {
-    const link = document.createElement('a');
-    link.download = safeName + '_' + dateStr + '_' + timeStr + '.jpg';
-    link.href = canvas.toDataURL('image/jpeg', 1.0);
-    link.click();
-
-    document.body.removeChild(clone);
-  });
-}
+    
+    document.body.appendChild(clone);
+    
+    const now = new Date();
+    const dateStr = now.getFullYear() + '-' +
+      String(now.getMonth()+1).padStart(2,'0') + '-' +
+      String(now.getDate()).padStart(2,'0');
+    const timeStr = String(now.getHours()).padStart(2,'0') + '-' +
+      String(now.getMinutes()).padStart(2,'0');
+    const safeName = filenamePrefix.replace(/\s+/g,'_');
+    
+    html2canvas(clone, {
+      scale: 4,
+      useCORS: true,
+      backgroundColor: isLightTheme ? '#fffef7' : '#020617'
+    }).then(canvas => {
+      const link = document.createElement('a');
+      link.download = `${safeName}_${dateStr}_${timeStr}.jpg`;
+      link.href = canvas.toDataURL('image/jpeg', 1.0);
+      link.click();
+      document.body.removeChild(clone);
+    }).catch(err => {
+      console.error(err);
+      alert('Gagal generate gambar');
+      document.body.removeChild(clone);
+    });
+  }
+  
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const panes = { tab1: document.getElementById('tab1'), tab2: document.getElementById('tab2') };
+  function switchTab(tabId) {
+    Object.keys(panes).forEach(id => panes[id].classList.remove('active-pane'));
+    panes[tabId].classList.add('active-pane');
+    tabBtns.forEach(btn => {
+      if (btn.dataset.tab === tabId) btn.classList.add('active');
+      else btn.classList.remove('active');
+    });
+  }
+  tabBtns.forEach(btn => btn.addEventListener('click', () => switchTab(btn.dataset.tab)));
 </script>
-
 </body>
-</html>
+  </html>
