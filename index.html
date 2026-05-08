@@ -351,7 +351,7 @@
   function getMatchedNames(district, address) {
     let m = [];
     if (isArifMatch(district,address)) m.push('Arif');
-    if (isRudiMatch(district,address)) m.push('Rudi');
+    if (isRudiMatch(district,address)) m.push('Nuraziz');
     if (isAziMatch(district,address)) m.push('Azi');
     if (isGigihMatch(district,address)) m.push('Gigih');
     if (isFitliMatch(district,address)) m.push('Fitli');
@@ -360,7 +360,7 @@
   }
 
   let globalOrigin = {};
-  let globalTambahan = { Arif:[], Rudi:[], Azi:[], Gigih:[], Fitli:[], Ahmad:[] };
+  let globalTambahan = { Arif:[], Nuraziz:[], Azi:[], Gigih:[], Fitli:[], Ahmad:[] };
   let dataLoaded = false;
 
   function processFile() {
@@ -371,7 +371,7 @@
       const text = e.target.result;
       const lines = text.split('\n');
       let rawDistricts = {};
-      globalTambahan = { Arif:[], Rudi:[], Azi:[], Gigih:[], Fitli:[], Ahmad:[] };
+      globalTambahan = { Arif:[], Nuraziz:[], Azi:[], Gigih:[], Fitli:[], Ahmad:[] };
       
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split('|');
@@ -456,7 +456,7 @@
       originDiv.appendChild(container);
     }
     
-    const names = ['Arif','Rudi','Azi','Gigih','Fitli','Ahmad'];
+    const names = ['Arif','Nuraziz','Azi','Gigih','Fitli','Ahmad'];
     let hasAny = false;
     const tambahanGrid = document.createElement('div');
     tambahanGrid.className = 'tambahan-grid';
